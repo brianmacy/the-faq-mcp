@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: pip install ruff mypy mcp
+
+      - name: Ruff lint
+        run: ruff check .claude/faq_server.py
+
+      - name: Ruff format
+        run: ruff format --check .claude/faq_server.py
+
+      - name: Mypy type check
+        run: mypy --ignore-missing-imports .claude/faq_server.py
+
+      - name: Syntax validation
+        run: python -m py_compile .claude/faq_server.py
+
+      - name: Server loads FAQs
+        run: |
+          python -c "
+          import importlib.util, sys
+          spec = importlib.util.spec_from_file_location('faq_server', '.claude/faq_server.py')
+          mod = importlib.util.module_from_spec(spec)
+          sys.modules['faq_server'] = mod
+          spec.loader.exec_module(mod)
+          assert len(mod._faqs) > 0, 'No FAQs loaded'
+          assert len(mod._index.docs) > 0, 'No documents indexed'
+          print(f'Loaded {len(mod._index.docs)} FAQs across {len(mod._faqs)} categories')
+          "
+
+  markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Prettier check
+        run: npx prettier --check "**/*.md"
