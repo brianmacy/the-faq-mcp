@@ -3,46 +3,28 @@
 ## Prerequisites
 
 - Python 3.10+
-- `uv` (recommended) or `pip`
+- [`uv`](https://docs.astral.sh/uv/) (recommended) or `pip install mcp`
 
 ## Quick Start
 
-1. **Copy the server and directory structure** into your project:
+Paste this prompt into Claude Code in your project's directory:
 
-```
-.claude/
-├── faq_server.py
-├── faqs/
-│   └── (your categories and FAQ files)
-```
+> Look at https://github.com/brianmacy/the-faq-mcp for the reference implementation of a FAQ MCP server. Copy .claude/faq_server.py and .mcp.json into this project, update the server name and instructions to match this project, and seed initial FAQ entries covering: how to build, how to run tests, environment setup, architecture overview, and any non-obvious project knowledge. Add a CLAUDE.md directive telling the LLM to query the FAQ before guessing. The FAQ entries should be specific to THIS project — exact commands, real procedures, actual architecture decisions.
 
-2. **Create `.mcp.json`** at your repo root (see the `mcp-json-setup` FAQ for the full launcher chain).
+The LLM will set up the server, configuration, FAQ entries, and CLAUDE.md directive — all tailored to your project.
 
-3. **(Optional) Create `.claude/settings.local.json`** to skip the approval prompt — Claude Code will discover the server from `.mcp.json` and prompt on first use even without this:
+## What Gets Created
 
-```json
-{
-  "enabledMcpjsonServers": ["your-server-name"],
-  "enableAllProjectMcpServers": true
-}
-```
+The prompt sets up:
 
-4. **Add a directive to your CLAUDE.md** telling the LLM to use the FAQ:
+- `.claude/faq_server.py` — the MCP server
+- `.claude/faqs/` — category directories with seed FAQ entries
+- `.mcp.json` — MCP server registration (see the `mcp-json-setup` FAQ for details on the launcher chain)
+- CLAUDE.md directive — tells the LLM to query the FAQ before guessing
 
-```markdown
-> **MANDATORY: You MUST use the `your-server-name` MCP tools for ALL build,
-> test, architecture, and planning tasks. Do NOT guess or use training data —
-> query `search_faqs(query)` or `get_faq(title)` FIRST.**
-```
+## Manual Testing
 
-5. **Create your first FAQ category and entry:**
-
-```bash
-mkdir -p .claude/faqs/getting-started
-# Write a markdown file covering your project's build procedure, for example
-```
-
-6. **Test the server:**
+To verify the server works:
 
 ```bash
 uv run --script .claude/faq_server.py
@@ -50,7 +32,7 @@ uv run --script .claude/faq_server.py
 python .claude/faq_server.py
 ```
 
-The server runs on stdio — Claude Code will launch it automatically via `.mcp.json`.
+The server runs on stdio — Claude Code launches it automatically via `.mcp.json`.
 
 ## What to Document First
 

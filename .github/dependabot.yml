@@ -4,8 +4,12 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 21
 
   - package-ecosystem: "pip"
     directory: "/.claude"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 21

@@ -53,5 +53,5 @@ All GitHub Actions `uses:` references must be hash-pinned with a tag comment for
 
 `.github/dependabot.yml` is configured for two ecosystems:
 
-- **github-actions** — keeps action pins up to date (weekly check)
-- **pip** — watches the `mcp` dependency in `.claude/` (weekly check)
+- **github-actions** — keeps action pins up to date (monthly check)
+- **pip** — watches the `mcp` dependency in `.claude/` (monthly check)

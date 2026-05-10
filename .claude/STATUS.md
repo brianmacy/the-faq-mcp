@@ -1,44 +1,29 @@
 # Project Status
 
 **Last updated:** 2026-05-10
+**Latest commit:** ready to push (pending)
 
 ## Current State
 
-All infrastructure for the FAQ MCP reference implementation has been created from scratch in a single session. Nothing beyond the initial commit (README.md stub) has been committed or pushed yet.
+README rewrite and CLAUDE.md restructure complete. The repo now has full educational documentation in README.md as the single source of truth, with CLAUDE.md referencing it instead of duplicating content.
 
 ## What Exists
 
+- `README.md` — Full educational documentation: problem, solution, setup prompt, keeping it alive, architecture, design decisions, data format, MCP configuration, repo structure
+- `CLAUDE.md` — References README for context, contains FAQ directive and maintenance workflow
 - `.claude/faq_server.py` — Working FAQ MCP server (Python 3.10+, FastMCP, BM25 search)
 - `.mcp.json` — MCP server registration with launcher chain (venv -> uv -> system python)
-- `.claude/settings.local.json` — Local activation config
-- `.claude/faqs/` — 6 categories, 11 FAQ entries covering architecture, configuration, design decisions, getting started, maintenance, and project status
-- `CLAUDE.md` — Full project guidance (purpose, architecture, design decisions, FAQ maintenance workflow)
-- `README.md` — Stub only (single heading)
-- `.github/workflows/ci.yml` — GitHub Actions CI with two jobs:
-  - `lint-and-test`: ruff lint + format, mypy, py_compile, server load test (Python 3.10/3.12/3.13 matrix)
-  - `markdown`: prettier check on all markdown files
-  - All `uses:` references hash-pinned with tag comments
-- `.gitignore` — Excludes `__pycache__/`, `*.pyc`, `.claude/.faq-venv/`, `.claude/settings.local.json`, `.DS_Store`
-- `CHANGELOG.md` — Unreleased entries for all work
+- `.claude/faqs/` — 6 categories, 12 FAQ entries covering architecture, configuration, design decisions, getting started, maintenance, and project status
+- `.github/workflows/ci.yml` — CI: ruff, mypy, py_compile, server load test (Python 3.10/3.12/3.13), prettier
+- `.github/dependabot.yml` — github-actions + pip ecosystems
+- `.gitignore`, `CHANGELOG.md`
+- `LICENSE` — Apache 2.0
 
-## Working Tree State
+## What Needs Work
 
-All files except README.md are untracked (not yet committed). The working tree is:
-
-```
- M README.md
-?? .claude/
-?? .github/
-?? .gitignore
-?? .mcp.json
-?? CHANGELOG.md
-?? CLAUDE.md
-```
-
-## Formatting
-
-- All markdown files pass `npx prettier --check`
-- All Python files pass `ruff check` and `ruff format --check`
+- Test suite — no tests yet (P0)
+- Test and document support for other LLM tools (Cursor, Copilot, Windsurf) (P1)
+- Standalone examples — showing how to adapt the pattern for other projects (P1)
 
 ## No Background Processes
 
