@@ -7,9 +7,3 @@ updates:
     cooldown:
       default-days: 21
 
-  - package-ecosystem: "pip"
-    directory: "/.claude"
-    schedule:
-      interval: "daily"
-    cooldown:
-      default-days: 21
