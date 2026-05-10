@@ -23,7 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - `markdown` — prettier check on all markdown files
   - All `uses:` references hash-pinned with tag comments (actions/checkout v4, actions/setup-python v5)
 - `.gitignore` excluding `__pycache__/`, `*.pyc`, `.claude/.faq-venv/`, `.claude/settings.local.json`, `.DS_Store`
-- Dependabot configuration (`.github/dependabot.yml`) for github-actions and pip ecosystems
+- Dependabot configuration (`.github/dependabot.yml`) for github-actions and pip ecosystems with daily interval and 21-day cooldown
+- `.claude/requirements.txt` — mirrors PEP 723 `mcp` dependency for Dependabot pip scanning (Dependabot cannot read PEP 723 inline script metadata)
 - LICENSE file (Apache 2.0)
 - README.md — full educational documentation: problem, solution, setup prompt, keeping it alive, architecture, design decisions, data format, MCP configuration, repo structure
 
@@ -31,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - CLAUDE.md — restructured to reference README instead of duplicating content; now contains only README reference, FAQ directive, and maintenance workflow
 - Setup FAQ — replaced manual steps with the setup prompt approach matching README
+- Dependabot — changed to daily interval with 21-day cooldown (catches CVEs fast, gates routine bumps); security updates bypass cooldown
 
 ### Fixed
 

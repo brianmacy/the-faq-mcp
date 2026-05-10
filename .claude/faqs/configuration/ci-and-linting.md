@@ -51,7 +51,11 @@ All GitHub Actions `uses:` references must be hash-pinned with a tag comment for
 
 ## Dependabot
 
-`.github/dependabot.yml` is configured for two ecosystems:
+`.github/dependabot.yml` is configured for two ecosystems, both on a **daily** interval with a **21-day cooldown**:
 
-- **github-actions** — keeps action pins up to date (monthly check)
-- **pip** — watches the `mcp` dependency in `.claude/` (monthly check)
+- **github-actions** — keeps action hash pins up to date
+- **pip** — watches the `mcp` dependency via `.claude/requirements.txt`
+
+The daily interval catches CVEs fast (security updates bypass the cooldown). The 21-day cooldown gates routine version bumps so they don't flood the repo with PRs.
+
+**Why requirements.txt?** Dependabot cannot scan PEP 723 inline script metadata (the `# /// script` block in `faq_server.py`). We added `.claude/requirements.txt` as a parallel declaration so Dependabot can detect CVEs in the `mcp` dependency. The `requirements.txt` must be kept in sync with the PEP 723 metadata in `faq_server.py`.

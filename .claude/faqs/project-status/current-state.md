@@ -10,7 +10,7 @@ An educational repository and working reference implementation for FAQ MCP serve
 - **FAQ MCP server** (`faq_server.py`) — fully functional with BM25 search, three tools, PEP 723 inline metadata
 - **MCP configuration** — `.mcp.json` with launcher chain (`.claude/settings.local.json` optional, for skipping approval prompt)
 - **CLAUDE.md** — references README for project context, contains FAQ directive and maintenance workflow
-- **FAQ content** — 12 entries across 6 categories: architecture, configuration, design-decisions, getting-started, maintenance, project-status
+- **FAQ content** — 13 entries across 6 categories: architecture, configuration, design-decisions, getting-started, maintenance, project-status
 - **Self-documenting** — the FAQ MCP documents itself as its own reference implementation
 - **GitHub Actions CI** (`.github/workflows/ci.yml`) — two jobs:
   - `lint-and-test`: ruff lint + format, mypy, py_compile, server load test across Python 3.10/3.12/3.13
@@ -19,6 +19,8 @@ An educational repository and working reference implementation for FAQ MCP serve
 - **`.gitignore`** — excludes `__pycache__/`, `*.pyc`, `.claude/.faq-venv/`, `.claude/settings.local.json`, `.DS_Store`
 - **Formatting** — all markdown files pass prettier, all Python passes ruff format
 - **LICENSE** — Apache 2.0
+- **Dependabot** — daily interval with 21-day cooldown for both github-actions and pip ecosystems; security updates bypass cooldown
+- **`.claude/requirements.txt`** — mirrors PEP 723 dependency (`mcp`) so Dependabot can scan it (Dependabot cannot read PEP 723 inline script metadata)
 
 ## What Is Not Yet Done
 
