@@ -9,8 +9,10 @@ dependencies beyond the `mcp` package.
 """
 
 import math
+import os
 import re
 import sys
+import threading
 from pathlib import Path
 
 try:
@@ -109,22 +111,61 @@ class _BM25Index:
 
 _faqs: dict[str, dict[str, str]] = {}
 _index = _BM25Index()
+_fingerprint: tuple[tuple[str, int], ...] = ()
+_reindex_lock = threading.Lock()
+
+
+def _compute_fingerprint() -> tuple[tuple[str, int], ...]:
+    """Fast FAQ directory fingerprint from file paths and mtimes."""
+    if not FAQ_DIR.is_dir():
+        return ()
+    entries: list[tuple[str, int]] = []
+    for cat_entry in os.scandir(FAQ_DIR):
+        if not cat_entry.is_dir(follow_symlinks=False):
+            continue
+        for file_entry in os.scandir(cat_entry.path):
+            if file_entry.name.endswith(".md") and file_entry.is_file(
+                follow_symlinks=False
+            ):
+                entries.append((file_entry.path, file_entry.stat().st_mtime_ns))
+    entries.sort()
+    return tuple(entries)
 
 
 def _load_faqs() -> None:
-    if not FAQ_DIR.is_dir():
+    global _faqs, _index, _fingerprint
+    new_faqs: dict[str, dict[str, str]] = {}
+    new_index = _BM25Index()
+    if FAQ_DIR.is_dir():
+        for cat_dir in sorted(FAQ_DIR.iterdir()):
+            if not cat_dir.is_dir():
+                continue
+            category = cat_dir.name
+            new_faqs[category] = {}
+            for md in sorted(cat_dir.glob("*.md")):
+                title = md.stem.replace("-", " ")
+                content = md.read_text(encoding="utf-8")
+                new_faqs[category][title] = content
+                new_index.add(_Document(category, title, content))
+        new_index.finalize()
+    _faqs = new_faqs
+    _index = new_index
+    _fingerprint = _compute_fingerprint()
+
+
+def _refresh_if_stale() -> None:
+    if not _reindex_lock.acquire(blocking=False):
         return
-    for cat_dir in sorted(FAQ_DIR.iterdir()):
-        if not cat_dir.is_dir():
-            continue
-        category = cat_dir.name
-        _faqs[category] = {}
-        for md in sorted(cat_dir.glob("*.md")):
-            title = md.stem.replace("-", " ")
-            content = md.read_text(encoding="utf-8")
-            _faqs[category][title] = content
-            _index.add(_Document(category, title, content))
-    _index.finalize()
+    try:
+        if _compute_fingerprint() != _fingerprint:
+            _load_faqs()
+    finally:
+        _reindex_lock.release()
+
+
+def _schedule_refresh() -> None:
+    """Trigger a background reindex check after serving the response."""
+    threading.Thread(target=_refresh_if_stale, daemon=True).start()
 
 
 _load_faqs()
@@ -162,7 +203,9 @@ def get_faq_categories() -> str:
         count = len(_faqs[cat])
         titles = ", ".join(sorted(_faqs[cat]))
         lines.append(f"**{cat}** ({count}): {titles}")
-    return "\n".join(lines)
+    result = "\n".join(lines)
+    _schedule_refresh()
+    return result
 
 
 @mcp.tool()
@@ -176,6 +219,7 @@ def search_faqs(query: str, category: str | None = None, max_results: int = 5) -
     """
     results = _index.search(query, category=category, max_results=max_results)
     if not results:
+        _schedule_refresh()
         return f"No results for '{query}'."
 
     lines = []
@@ -205,7 +249,9 @@ def search_faqs(query: str, category: str | None = None, max_results: int = 5) -
         lines.append(
             f"### [{doc.category}] {doc.title} (score: {score:.2f})\n{excerpt}\n"
         )
-    return "\n".join(lines) + _IMPROVEMENT_FOOTER
+    result = "\n".join(lines) + _IMPROVEMENT_FOOTER
+    _schedule_refresh()
+    return result
 
 
 @mcp.tool()
@@ -222,6 +268,7 @@ def get_faq(title: str, category: str | None = None) -> str:
     for cat in cats:
         for faq_title, content in _faqs.get(cat, {}).items():
             if faq_title.lower() == title_normalized:
+                _schedule_refresh()
                 return f"# [{cat}] {faq_title}\n\n{content}" + _IMPROVEMENT_FOOTER
 
     for cat in cats:
@@ -230,8 +277,10 @@ def get_faq(title: str, category: str | None = None) -> str:
                 title_normalized in faq_title.lower()
                 or faq_title.lower() in title_normalized
             ):
+                _schedule_refresh()
                 return f"# [{cat}] {faq_title}\n\n{content}" + _IMPROVEMENT_FOOTER
 
+    _schedule_refresh()
     return f"FAQ '{title}' not found. Use get_faq_categories() to see available FAQs."
 
 
