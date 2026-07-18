@@ -154,18 +154,20 @@ def _load_faqs() -> None:
 
 
 def _refresh_if_stale() -> None:
-    if not _reindex_lock.acquire(blocking=False):
-        return
-    try:
+    """Reindex synchronously if the FAQ directory changed since the last load.
+
+    Called at the START of every tool request so the current response always
+    reflects the latest on-disk FAQs. This fixes the prior refresh-AFTER-serve
+    design, where a just-created or just-edited FAQ was invisible to the FIRST
+    query that touched it (the reindex was scheduled on a background daemon
+    thread AFTER the response was returned) and only became visible on a
+    subsequent call. Steady-state cost is one cheap mtime fingerprint scan; a
+    full reload runs only when a file actually changed. The blocking lock makes
+    concurrent callers wait for an in-flight reload rather than serve stale data.
+    """
+    with _reindex_lock:
         if _compute_fingerprint() != _fingerprint:
             _load_faqs()
-    finally:
-        _reindex_lock.release()
-
-
-def _schedule_refresh() -> None:
-    """Trigger a background reindex check after serving the response."""
-    threading.Thread(target=_refresh_if_stale, daemon=True).start()
 
 
 _load_faqs()
@@ -196,6 +198,7 @@ mcp = FastMCP(
 @mcp.tool()
 def get_faq_categories() -> str:
     """List all FAQ categories with the number of articles in each."""
+    _refresh_if_stale()
     if not _faqs:
         return "No FAQ categories found. Ensure .claude/faqs/ contains category directories with .md files."
     lines = []
@@ -204,7 +207,6 @@ def get_faq_categories() -> str:
         titles = ", ".join(sorted(_faqs[cat]))
         lines.append(f"**{cat}** ({count}): {titles}")
     result = "\n".join(lines)
-    _schedule_refresh()
     return result
 
 
@@ -217,9 +219,9 @@ def search_faqs(query: str, category: str | None = None, max_results: int = 5) -
         category: optional category filter
         max_results: max results to return (default 5)
     """
+    _refresh_if_stale()
     results = _index.search(query, category=category, max_results=max_results)
     if not results:
-        _schedule_refresh()
         return f"No results for '{query}'."
 
     lines = []
@@ -250,7 +252,6 @@ def search_faqs(query: str, category: str | None = None, max_results: int = 5) -
             f"### [{doc.category}] {doc.title} (score: {score:.2f})\n{excerpt}\n"
         )
     result = "\n".join(lines) + _IMPROVEMENT_FOOTER
-    _schedule_refresh()
     return result
 
 
@@ -262,13 +263,13 @@ def get_faq(title: str, category: str | None = None) -> str:
         title: FAQ title (use dashes or spaces, case-insensitive)
         category: optional category to narrow the search
     """
+    _refresh_if_stale()
     title_normalized = title.lower().replace("-", " ")
 
     cats = [category] if category and category in _faqs else sorted(_faqs)
     for cat in cats:
         for faq_title, content in _faqs.get(cat, {}).items():
             if faq_title.lower() == title_normalized:
-                _schedule_refresh()
                 return f"# [{cat}] {faq_title}\n\n{content}" + _IMPROVEMENT_FOOTER
 
     for cat in cats:
@@ -277,10 +278,8 @@ def get_faq(title: str, category: str | None = None) -> str:
                 title_normalized in faq_title.lower()
                 or faq_title.lower() in title_normalized
             ):
-                _schedule_refresh()
                 return f"# [{cat}] {faq_title}\n\n{content}" + _IMPROVEMENT_FOOTER
 
-    _schedule_refresh()
     return f"FAQ '{title}' not found. Use get_faq_categories() to see available FAQs."
 
 

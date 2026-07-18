@@ -36,5 +36,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Live reindex now runs **before** serving each tool response instead of after. `_refresh_if_stale()` is called at the start of `get_faq_categories`/`search_faqs`/`get_faq`, replacing the prior refresh-**after**-serve background thread (`_schedule_refresh`). Previously a just-created or just-edited FAQ was invisible to the **first** query that touched it (the reindex was scheduled on a daemon thread only after the response returned) and appeared only on a subsequent call; it is now visible immediately. Steady-state cost is one cheap mtime fingerprint scan; a full reload runs only when a file actually changed. The reindex lock is now blocking, so concurrent callers wait for an in-flight reload rather than serve stale data.
 - Markdown formatting — all 8 files that failed prettier check now pass
 - Python formatting — `faq_server.py` now passes `ruff format --check`
