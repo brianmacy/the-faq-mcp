@@ -43,8 +43,8 @@ jobs:
           sys.modules['faq_server'] = mod
           spec.loader.exec_module(mod)
           assert len(mod._faqs) > 0, 'No FAQs loaded'
-          assert len(mod._index.docs) > 0, 'No documents indexed'
-          print(f'Loaded {len(mod._index.docs)} FAQs across {len(mod._faqs)} categories')
+          assert len(mod._index.by_path) > 0, 'No documents indexed'
+          print(f'Loaded {len(mod._index.by_path)} FAQs across {len(mod._faqs)} categories')
           "
 
   markdown:
