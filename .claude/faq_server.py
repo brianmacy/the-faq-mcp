@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp"]
+# dependencies = ["mcp<2"]
 # ///
 """FAQ MCP Server — queryable project FAQ with BM25 search.
 
