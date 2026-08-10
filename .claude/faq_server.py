@@ -47,7 +47,7 @@ def _tokenize(text: str) -> list[str]:
 
 
 class _Document:
-    __slots__ = ("category", "title", "content", "tokens", "tf", "length")
+    __slots__ = ("category", "content", "length", "tf", "title", "tokens")
 
     def __init__(self, category: str, title: str, content: str) -> None:
         self.category = category
