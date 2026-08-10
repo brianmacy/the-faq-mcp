@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
@@ -20,7 +23,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: pip install ruff mypy mcp
+        run: pip install ruff mypy "mcp<2"
 
       - name: Ruff lint
         run: ruff check .claude/faq_server.py

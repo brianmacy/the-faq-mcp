@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp"]
+# dependencies = ["mcp<2"]
 # ///
 """FAQ MCP Server — queryable project FAQ with BM25 search.
 
@@ -47,7 +47,7 @@ def _tokenize(text: str) -> list[str]:
 
 
 class _Document:
-    __slots__ = ("category", "title", "content", "tokens", "tf", "length")
+    __slots__ = ("category", "content", "length", "tf", "title", "tokens")
 
     def __init__(self, category: str, title: str, content: str) -> None:
         self.category = category
