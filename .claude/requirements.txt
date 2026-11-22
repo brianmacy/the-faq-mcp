@@ -1,1 +1,12 @@
-mcp
+# Runtime dependency for .claude/faq_server.py.
+#
+# Pinned, and pinned to 1.x on purpose. mcp 2.0 renamed `FastMCP` to
+# `MCPServer` and removed `mcp.server.fastmcp` entirely, so the server does not
+# import under 2.x; ci.yml has always installed `mcp<2` for that reason. Before
+# this pin the file said only `mcp`, so every install resolved to whatever was
+# current that day -- 2.3.0 by 2026-11-22 -- and the Dependabot `pip` entry had
+# no version to bump and nothing to compare against.
+#
+# Moving to 2.x is a code change (the FastMCP import and the decorators), not a
+# version bump.
+mcp==1.30.0
