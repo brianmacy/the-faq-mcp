@@ -6,7 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **FAQ reminder hooks (`hooks/faq-reminder.sh`, `hooks/README.md`).** A `CLAUDE.md` line saying "keep the FAQ updated" is read once, at the start of a session, and then competes with everything after it. These fire at the two moments the knowledge is actually about to be lost: a **`PreCompact`** hook just before the conversation is compacted (nothing else in the prompt fires there, and compaction is exactly when unwritten learnings get summarised away), and a **`UserPromptSubmit`** hook at most once an hour (`FAQ_REMINDER_INTERVAL_MINUTES`, `0` disables). Silent when the project has no FAQ tree, silent on the first prompt of a session, one stamp per project so two open repos do not silence each other, and the reminder states that "nothing to add" is a correct answer so it cannot pressure the model into inventing entries.
+
 ### Security
+
 - **`pip-audit` gate added (`.github/workflows/security.yml`).** Nothing here checked a dependency against an advisory database — the counterpart to `cargo audit` / `cargo vet` in the Rust repos. It audits both places packages are declared: `.claude/requirements.txt`, and the `ruff` / `mypy` / `mcp` pins that live only in `ci.yml`'s `pip install` line, where Dependabot cannot see them either. Runs on PRs, on pushes to main and daily, because advisories get published against versions already pinned. Both sets are clean today.
 
 ### Added
