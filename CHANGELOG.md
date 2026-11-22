@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **`.claude/requirements.txt` pins `mcp==1.30.0`.** It said only `mcp`, so every install resolved to whatever was current that day — 2.3.0 by now — while `ci.yml` has always installed `mcp<2`, because mcp 2.0 renamed `FastMCP` to `MCPServer` and removed `mcp.server.fastmcp`, so the server does not import under 2.x. The unpinned file also left the Dependabot `pip` entry with no version to bump and `pip-audit` with nothing stable to audit. Verified under the pin: the server imports and loads its FAQs, and `pip-audit --strict` is clean. Moving to 2.x is a code change, not a version bump.
+
+### Changed
+
 - **The hourly reminder now asks the model to CONSULT the FAQ as well as update it.** It only covered the write half, which let the expensive failure through: acting on training data for a procedure the project has already documented. `keeping-faqs-updated.md` leads with "Before acting on assumptions or training data, query the FAQ MCP first", and the reminder now does too — `search_faqs()` / `get_faq()` for whatever is about to be done, read half first, before the write half. The `PreCompact` reminder is unchanged in intent and still asks only for the write: at compaction there is no next thing to look up, only knowledge about to be lost.
 
 ### Added
