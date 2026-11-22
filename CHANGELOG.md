@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **The hourly reminder now asks the model to CONSULT the FAQ as well as update it.** It only covered the write half, which let the expensive failure through: acting on training data for a procedure the project has already documented. `keeping-faqs-updated.md` leads with "Before acting on assumptions or training data, query the FAQ MCP first", and the reminder now does too — `search_faqs()` / `get_faq()` for whatever is about to be done, read half first, before the write half. The `PreCompact` reminder is unchanged in intent and still asks only for the write: at compaction there is no next thing to look up, only knowledge about to be lost.
+
 ### Added
 
 - **FAQ reminder hooks (`hooks/faq-reminder.sh`, `hooks/README.md`).** A `CLAUDE.md` line saying "keep the FAQ updated" is read once, at the start of a session, and then competes with everything after it. These fire at the two moments the knowledge is actually about to be lost: a **`PreCompact`** hook just before the conversation is compacted (nothing else in the prompt fires there, and compaction is exactly when unwritten learnings get summarised away), and a **`UserPromptSubmit`** hook at most once an hour (`FAQ_REMINDER_INTERVAL_MINUTES`, `0` disables). Silent when the project has no FAQ tree, silent on the first prompt of a session, one stamp per project so two open repos do not silence each other, and the reminder states that "nothing to add" is a correct answer so it cannot pressure the model into inventing entries.
