@@ -5,10 +5,17 @@ written down. `CLAUDE.md` can say "keep the FAQ updated", but that line is read
 once, at the start, and then competes with everything after it. These hooks fire
 at the two moments the knowledge is actually about to be lost.
 
-| Hook               | When it fires                                                                      | Why it matters                                                                                                                                         |
-| ------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `PreCompact`       | immediately before the conversation is compacted, `trigger` `"auto"` or `"manual"` | everything learned and not written down is about to be summarised away — the highest-value reminder in a session, and nothing in the prompt fires here |
-| `UserPromptSubmit` | on a prompt, at most once per interval (default 60 min)                            | an hour of work accumulates more than anyone flushes at the end                                                                                        |
+| Hook               | When it fires                                                                      | What it asks for                                                                                                                                                  |
+| ------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PreCompact`       | immediately before the conversation is compacted, `trigger` `"auto"` or `"manual"` | **write.** Everything learned and not written down is about to be summarised away — the highest-value reminder in a session, and nothing in the prompt fires here |
+| `UserPromptSubmit` | on a prompt, at most once per interval (default 60 min)                            | **consult, then write.** More work is about to happen, and work started from a guess is what the FAQ exists to prevent                                            |
+
+The FAQ is a two-way discipline, and the two hooks ask for different halves of
+it. Mid-session the **read** half comes first — `search_faqs()` / `get_faq()`
+for whatever is about to be done — because acting on training data when the
+project has already documented the procedure is the expensive failure. At
+compaction there is no "next thing" to look up, only knowledge about to be
+lost, so that one asks to write.
 
 There is no timer event in Claude Code, so "every hour" is done by stamping a
 file and staying silent until the interval has passed.
@@ -60,9 +67,11 @@ every project.
   do not silence each other.
 - **`FAQ_REMINDER_INTERVAL_MINUTES`** changes the interval; `0` disables the
   periodic reminder without unwiring it. `PreCompact` always fires.
-- **The reminder says that "nothing to add" is a correct answer.** Without that,
-  a reminder pressures the model into inventing an entry or rewriting a correct
-  one, which is how a FAQ fills with noise.
+- **The reminder says that "nothing to consult and nothing to add" is a correct
+  answer.** Without that, a reminder pressures the model into inventing an
+  entry, rewriting a correct one, or re-reading entries it already read this
+  session — which is how a FAQ fills with noise and a session fills with
+  pointless tool calls.
 
 ## Verifying it
 
