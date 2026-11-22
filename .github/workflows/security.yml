@@ -1,0 +1,66 @@
+---
+name: Security
+
+# Dependency audit for the Python packages this repo installs. It is the
+# counterpart to the `cargo audit` / `cargo vet` gates in the Rust repos: until
+# now nothing here checked a dependency against an advisory database.
+#
+# Two sets are audited, because they are declared in two places:
+#   - .claude/requirements.txt  — what a user installs to run the FAQ server
+#   - the inline pins in ci.yml — ruff, mypy and mcp, which exist only in that
+#     workflow's `pip install` line, so Dependabot cannot see them either
+#
+# pip-audit queries the Python Packaging Advisory Database (PyPA) plus OSV.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Advisories are published against versions already pinned, so a clean PR
+    # run goes stale. Re-check daily against a fresh database.
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  pip-audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      # Pinned: an unpinned audit tool is itself an unreviewed dependency, and a
+      # silent major bump would change what this gate means.
+      - name: Install pip-audit
+        run: python -m pip install pip-audit==2.10.1
+
+      # --strict fails on a dependency pip-audit cannot resolve, so a typo or a
+      # renamed package cannot pass as "no known vulnerabilities".
+      - name: Audit the server requirements
+        run: pip-audit --strict --requirement .claude/requirements.txt
+
+      # ruff, mypy and mcp are pinned inline in ci.yml's `pip install` line and
+      # exist in no requirements file, so nothing audits or updates them.
+      # Materialise them so pip-audit can read them (it takes a requirements
+      # file or a project path, never bare specs on the command line).
+      # Keep this list in step with ci.yml.
+      - name: Audit the CI tool pins
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/ci-tools.txt" <<'EOF'
+          ruff==0.17.2
+          mypy==2.4.0
+          mcp<2
+          EOF
+          pip-audit --strict --requirement "$RUNNER_TEMP/ci-tools.txt"
