@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+- **`pip-audit` gate added (`.github/workflows/security.yml`).** Nothing here checked a dependency against an advisory database — the counterpart to `cargo audit` / `cargo vet` in the Rust repos. It audits both places packages are declared: `.claude/requirements.txt`, and the `ruff` / `mypy` / `mcp` pins that live only in `ci.yml`'s `pip install` line, where Dependabot cannot see them either. Runs on PRs, on pushes to main and daily, because advisories get published against versions already pinned. Both sets are clean today.
+
 ### Added
 
 - FAQ MCP server (`faq_server.py`) with BM25 search, three tools (`get_faq_categories`, `search_faqs`, `get_faq`), PEP 723 inline metadata for `uv run --script` execution
