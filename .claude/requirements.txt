@@ -9,4 +9,4 @@
 #
 # Moving to 2.x is a code change (the FastMCP import and the decorators), not a
 # version bump.
-mcp==1.30.0
+mcp==2.3.0
